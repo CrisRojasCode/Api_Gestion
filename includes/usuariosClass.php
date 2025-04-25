@@ -48,5 +48,10 @@ class Usuario {
 
         return $stmt->execute();
     }
+    
+    public function getAll() {
+        $query = "SELECT id, usuario FROM " . $this->table;
+        return $this->conn->query($query);
+    }
 }
 ?>
