@@ -1,17 +1,19 @@
 <?php
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Content-Type: application/json");
 
 include_once '../../includes/DatabaseClass.php';
 include_once '../../includes/eventosClass.php';
 
 $db = (new Database())->getConnection();
-$eventos = new Eventos($db);
+$evento = new Eventos($db);
 
-$result = $eventos->getAll();
-$data = $result->fetchAll(PDO::FETCH_ASSOC);
+$result = $evento->getAll();
+$eventos = [];
 
-header('Content-Type: application/json');
-echo json_encode($data);
-?>
+while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+    $row['imagen'] = 'http://localhost/tu-proyecto/uploads/' . $row['imagen'];
+    $eventos[] = $row;
+}
+
+echo json_encode($eventos);

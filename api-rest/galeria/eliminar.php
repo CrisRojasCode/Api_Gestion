@@ -1,23 +1,28 @@
 <?php
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Methods: POST");
+header("Access-Control-Allow-Headers: Content-Type");
 
 include_once '../../includes/DatabaseClass.php';
 include_once '../../includes/galeriaClass.php';
 
-$data = json_decode(file_get_contents("php://input"));
-
-if (!isset($data->id)) {
-    http_response_code(400);
-    echo json_encode(["message" => "ID requerido"]);
-    exit;
-}
-
 $db = (new Database())->getConnection();
 $galeria = new Galeria($db);
 
-$success = $galeria->delete($data->id);
+// Recibir el ID y nombre del archivo (para eliminar físicamente)
+$id = $_POST['id'] ?? null;
+$archivo = $_POST['archivo'] ?? null;
 
+if (!$id || !$archivo) {
+    http_response_code(400);
+    echo json_encode(["success" => false, "message" => "Datos incompletos"]);
+    exit;
+}
+
+$ruta = '../../uploads/' . $archivo;
+if (file_exists($ruta)) {
+    unlink($ruta); // Elimina la imagen física
+}
+
+$success = $galeria->delete($id);
 echo json_encode(["success" => $success]);
-?>

@@ -1,64 +1,43 @@
 <?php
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Methods: POST");
+header("Access-Control-Allow-Headers: Content-Type");
 
 include_once '../../includes/DatabaseClass.php';
 include_once '../../includes/eventosClass.php';
 
-function guardarImagen($file) {
-    if (!isset($file['imagen']) || $file['imagen']['error'] !== UPLOAD_ERR_OK) {
-        return null;
-    }
+$db = (new Database())->getConnection();
+$evento = new Eventos($db);
 
-    $directorio = __DIR__ . '/../../gallery/';
-    if (!is_dir($directorio)) {
-        mkdir($directorio, 0777, true);
-    }
+$id = $_POST['id'] ?? null;
+$titulo = $_POST['titulo'] ?? '';
+$descripcion = $_POST['descripcion'] ?? '';
+$fecha = $_POST['fecha'] ?? '';
+$hora_inicio = $_POST['hora_inicio'] ?? '';
+$hora_fin = $_POST['hora_fin'] ?? '';
+$lugar = $_POST['lugar'] ?? '';
+$categoria = $_POST['categoria'] ?? '';
+$participantes = $_POST['participantes'] ?? '';
+$imagen = $_POST['imagenActual'] ?? '';
 
-    $nombreArchivo = uniqid() . '_' . basename($file['imagen']['name']);
-    $rutaDestino = $directorio . $nombreArchivo;
-
-    if (move_uploaded_file($file['imagen']['tmp_name'], $rutaDestino)) {
-        return 'https://gray-gnat-361867.hostingersite.com/gallery/' . $nombreArchivo;
-    }
-
-    return null;
-}
-
-// Verificar que el ID esté presente
-if (!isset($_POST['id'])) {
+if (!$id) {
     http_response_code(400);
-    echo json_encode(["message" => "ID requerido"]);
+    echo json_encode(["success" => false, "message" => "ID no proporcionado"]);
     exit;
 }
 
-// Si se sube nueva imagen, la guardamos
-$imagenEnlace = null;
-if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {
-    $imagenEnlace = guardarImagen($_FILES);
+if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] === 0) {
+    $nombreImagen = uniqid() . "_" . basename($_FILES['imagen']['name']);
+    $ruta = '../../uploads/' . $nombreImagen;
+
+    if (move_uploaded_file($_FILES['imagen']['tmp_name'], $ruta)) {
+        $imagen = $nombreImagen;
+    } else {
+        http_response_code(500);
+        echo json_encode(["success" => false, "message" => "Error al subir imagen"]);
+        exit;
+    }
 }
 
-// Si no suben nueva imagen, quizá quieres mantener la que ya tenía
-if (!$imagenEnlace && isset($_POST['imagen_actual'])) {
-    $imagenEnlace = $_POST['imagen_actual']; // Imagen anterior enviada por el formulario
-}
-
-$db = (new Database())->getConnection();
-$eventos = new Eventos($db);
-
-$success = $eventos->update(
-    $_POST['id'],
-    $_POST['titulo'] ?? null,
-    $_POST['descripcion'] ?? null,
-    $_POST['fecha'] ?? null,
-    $_POST['hora_inicio'] ?? null,
-    $_POST['hora_fin'] ?? null,
-    $_POST['lugar'] ?? null,
-    $_POST['categoria'] ?? null,
-    $_POST['participantes'] ?? null,
-    $imagenEnlace
-);
-
+$success = $evento->update($id, $titulo, $descripcion, $fecha, $hora_inicio, $hora_fin, $lugar, $categoria, $participantes, $imagen);
 echo json_encode(["success" => $success]);
-?>

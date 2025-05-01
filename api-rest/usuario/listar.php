@@ -1,7 +1,6 @@
 <?php
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Content-Type: application/json");
 
 include_once '../../includes/DatabaseClass.php';
 include_once '../../includes/usuariosClass.php';
@@ -10,8 +9,11 @@ $db = (new Database())->getConnection();
 $usuario = new Usuario($db);
 
 $result = $usuario->getAll();
-$data = $result->fetchAll(PDO::FETCH_ASSOC);
 
-header('Content-Type: application/json');
-echo json_encode($data);
-?>
+$usuarios = [];
+
+while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+    $usuarios[] = $row;
+}
+
+echo json_encode($usuarios);

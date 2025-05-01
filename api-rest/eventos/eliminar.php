@@ -1,23 +1,27 @@
 <?php
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Methods: POST");
+header("Access-Control-Allow-Headers: Content-Type");
 
 include_once '../../includes/DatabaseClass.php';
 include_once '../../includes/eventosClass.php';
 
-$data = json_decode(file_get_contents("php://input"));
+$db = (new Database())->getConnection();
+$evento = new Eventos($db);
 
-if (!isset($data->id)) {
+$id = $_POST['id'] ?? null;
+$imagen = $_POST['imagen'] ?? null;
+
+if (!$id || !$imagen) {
     http_response_code(400);
-    echo json_encode(["message" => "ID requerido"]);
+    echo json_encode(["success" => false, "message" => "Datos incompletos"]);
     exit;
 }
 
-$db = (new Database())->getConnection();
-$eventos = new Eventos($db);
+$ruta = '../../uploads/' . $imagen;
+if (file_exists($ruta)) {
+    unlink($ruta);
+}
 
-$success = $eventos->delete($data->id);
-
+$success = $evento->delete($id);
 echo json_encode(["success" => $success]);
-?>

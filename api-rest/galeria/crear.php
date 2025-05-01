@@ -1,54 +1,35 @@
 <?php
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Methods: POST");
+header("Access-Control-Allow-Headers: Content-Type");
 
 include_once '../../includes/DatabaseClass.php';
 include_once '../../includes/galeriaClass.php';
 
-function guardarImagen($file) {
-    if (!isset($file['imagen']) || $file['imagen']['error'] !== UPLOAD_ERR_OK) {
-        return null;
-    }
-
-    $directorio = __DIR__ . '/../../gallery/';
-    if (!is_dir($directorio)) {
-        mkdir($directorio, 0777, true);
-    }
-
-    $nombreArchivo = uniqid() . '_' . basename($file['imagen']['name']);
-    $rutaDestino = $directorio . $nombreArchivo;
-
-    if (move_uploaded_file($file['imagen']['tmp_name'], $rutaDestino)) {
-        return 'https://gray-gnat-361867.hostingersite.com/gallery/' . $nombreArchivo;
-    }
-
-    return null;
-}
-
-// Leer los datos desde $_POST
-if (!isset($_POST['titulo']) || !isset($_POST['categoria'])) {
-    http_response_code(400);
-    echo json_encode(["message" => "Datos incompletos"]);
-    exit;
-}
-
-// Guardar la imagen y obtener el enlace
-$imagenEnlace = guardarImagen($_FILES);
-if ($imagenEnlace === null) {
-    http_response_code(400);
-    echo json_encode(["message" => "Error al subir la imagen"]);
-    exit;
-}
-
 $db = (new Database())->getConnection();
 $galeria = new Galeria($db);
 
-$success = $galeria->create(
-    $_POST['titulo'],
-    $_POST['categoria'],
-    $imagenEnlace
-);
+// Recibir datos del formulario
+$titulo = $_POST['titulo'] ?? '';
+$categoria = $_POST['categoria'] ?? '';
+$archivo = '';
 
+if (isset($_FILES['archivo']) && $_FILES['archivo']['error'] === 0) {
+    $nombreArchivo = uniqid() . "_" . basename($_FILES['archivo']['name']);
+    $rutaDestino = '../../uploads/' . $nombreArchivo;
+
+    if (move_uploaded_file($_FILES['archivo']['tmp_name'], $rutaDestino)) {
+        $archivo = $nombreArchivo;
+    } else {
+        http_response_code(500);
+        echo json_encode(["success" => false, "message" => "Error al subir la imagen"]);
+        exit;
+    }
+} else {
+    http_response_code(400);
+    echo json_encode(["success" => false, "message" => "No se envió ninguna imagen"]);
+    exit;
+}
+
+$success = $galeria->create($titulo, $categoria, $archivo);
 echo json_encode(["success" => $success]);
-?>
