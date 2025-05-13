@@ -65,11 +65,11 @@ class Eventos {
     $stmt->bindParam(":id", $id);
     $stmt->execute();
 
-        if ($stmt->rowCount() > 0) {
-            return $stmt->fetch(PDO::FETCH_ASSOC);
-        } else {
-            return false;
-        }
+    if ($stmt->rowCount() > 0) {
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    } else {
+        return false;
+    }
     }
 
 }
