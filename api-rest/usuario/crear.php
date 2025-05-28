@@ -12,6 +12,11 @@ $usuario = new Usuario($db);
 // Recibir JSON plano
 $data = json_decode(file_get_contents("php://input"));
 
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
 if (!isset($data->usuario) || !isset($data->clave)) {
     http_response_code(400);
     echo json_encode(["success" => false, "message" => "Datos incompletos"]);

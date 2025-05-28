@@ -14,15 +14,8 @@ $id = $_POST['id'] ?? null;
 $titulo = $_POST['titulo'] ?? '';
 $categoria = $_POST['categoria'] ?? '';
 $descripcion = $_POST['descripcion'] ?? '';
-$archivo = $_POST['archivoActual'] ?? ''; // valor por defecto: el actual
 
-if (!$id) {
-    http_response_code(400);
-    echo json_encode(["success" => false, "message" => "ID no proporcionado"]);
-    exit;
-}
-
-// Verificar si se subió un nuevo archivo
+// Prioridad 1: si subió un nuevo archivo
 if (isset($_FILES['archivo']) && $_FILES['archivo']['error'] === 0) {
     $nombreArchivo = uniqid() . "_" . basename($_FILES['archivo']['name']);
     $ruta = "../../uploads/" . $nombreArchivo;
@@ -35,7 +28,22 @@ if (isset($_FILES['archivo']) && $_FILES['archivo']['error'] === 0) {
         exit;
     }
 }
+// Prioridad 2: si no subió nada pero envió archivo anterior (desde JS)
+elseif (isset($_POST['archivoUsar'])) {
+    $archivo = $_POST['archivoUsar'];
+}
+// Prioridad 3: no hay archivo disponible
+else {
+    $archivo = '';
+}
 
+if (!$id) {
+    http_response_code(400);
+    echo json_encode(["success" => false, "message" => "ID no proporcionado"]);
+    exit;
+}
+
+// Ejecutar actualización
 $success = $galeria->update($id, $titulo, $categoria, $archivo, $descripcion);
 
 if ($success) {

@@ -15,11 +15,12 @@ $descripcion = $_POST['descripcion'] ?? '';
 $categoria = $_POST['categoria'] ?? '';
 $archivo = '';
 
-if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] === 0) {
-    $nombreImagen = uniqid() . "_" . basename($_FILES['imagen']['name']);
+// Verifica y guarda la imagen enviada
+if (isset($_FILES['archivo']) && $_FILES['archivo']['error'] === 0) {
+    $nombreImagen = uniqid() . "_" . basename($_FILES['archivo']['name']);
     $ruta = '../../uploads/' . $nombreImagen;
 
-    if (move_uploaded_file($_FILES['imagen']['tmp_name'], $ruta)) {
+    if (move_uploaded_file($_FILES['archivo']['tmp_name'], $ruta)) {
         $archivo = $nombreImagen;
     } else {
         http_response_code(500);
